@@ -1,3 +1,9 @@
+
+"""
+This Python script takes a text string as an input and uses the distilgpt2 text generation AI module
+to generate more text on the same topic.
+"""
+
 # Import the necessary library from the transformers package
 from transformers import pipeline
 
@@ -5,7 +11,7 @@ from transformers import pipeline
 # This pipeline will generate text based on a given prompt
 generator = pipeline("text-generation", model="distilgpt2")
 
-# Generate text based on the prompt "Warren Buffet used to"
+# Generate text based on the prompt
 # - max_length: maximum length of the generated sequence
 # - num_return_sequences: number of different sequences to generate
 res = generator(

@@ -1,3 +1,14 @@
+
+"""
+This Python script takes an Mp3 audio file, divides the file into multiple shorter chunks and transcribes
+the words that are spoken into written text. The text is printed out in the terminal window after the
+transcription of each audio chunk has finished.
+The Python module used for transcription is called faster_whisper.
+
+The script may not need to be executed on a GPU such as Google Colab.
+It may not work very well with a CPU processor.
+"""
+
 !pip install faster_whisper
 
 import os
@@ -8,12 +19,12 @@ import librosa
 from faster_whisper import WhisperModel
 
 # Configuration
-root_directory = 'drive/MyDrive'#'content/drive/MyDrive'
-data_dir = root_directory + '/soundfile_splitter_transcriber' #+ '/20260103_vildsvinsdetektor'
+root_directory = 'drive/MyDrive'
+data_dir = root_directory + '/soundfile_splitter_transcriber'
 
 INPUT_FOLDER = data_dir + '/input'
 OUTPUT_FOLDER = data_dir + '/output'
-FILENAME = 'teknik båt 20251202 reparation och service'  # Replace with your actual filename
+FILENAME = 'soundfile_to_transcribe'  # Replace with your actual filename
 MP3_FILENAME = FILENAME + '.mp3'
 ZIP_FILENAME = 'split_' + FILENAME + '.zip'
 

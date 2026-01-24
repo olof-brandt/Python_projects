@@ -1,7 +1,17 @@
 
-# @title
+"""
+This Python program loads a pre-trained neural network model from the file model_state.pth.
+It has been trained using images of animals from Swedish fauna, and has been taught to
+recognize 5 classes of animals:
+1. Wild board
+2. Badger
+3. Horse
+4. Cat
+5. Cockatoo
 
-
+In order to make the program more user friendly, a GUI (graphic user interface) has been introduced,
+where the user can upload images and check if they adhere to the mentioned 5 classes.
+"""
 #Importing all required packages
 import torch
 import torch.nn as nn
@@ -112,10 +122,6 @@ def image_preprocessing(filename):
 
     # Load the image into Python
     img = Image.open(filename).convert('RGB')
-
-
-    # -----------men här behåller jag inte aspect ratio?
-    # Resizing the image's shortest side to 256 pixels, while maintaining the aspect ratio.
     img.thumbnail(size=(256, 256))
 
     # Center cropping the image to 224x224 pixels.
@@ -142,13 +148,8 @@ def image_preprocessing(filename):
 
 # Define the local adress to an image file.
 filename = own_dir + '/' + 'hast01.jpg'
-# print(filename)
 
 # TODO: Process a PIL image for use in a PyTorch model
-
-# image = image_preprocessing(filename)
-
-
 
 ################
 
@@ -172,8 +173,6 @@ def imshow(image, ax=None, title=None):
     ax.imshow(image)
 
     return ax
-
-# imshow(image)
 
 
 ################
@@ -226,10 +225,8 @@ def predict(label_index, image, model, topk=1):
 
 
     ps = torch.exp(log_ps)
-    # ps = torch.nn.functional.softmax(outputs, dim=1)
     top_ps, top_indices = ps.topk(1, dim=1)
 
-    # print(ps)
 
 
     # Create a list of the probabilities of the top classes
@@ -244,18 +241,12 @@ def predict(label_index, image, model, topk=1):
     # Extract the class names to a list of strings
     classes_strings_list = list(sorted_classes_dict.values())
 
-    #print(list_indices)
-
-
-
     # Create an array with the top classes.
     top_classes = []
     for x in list_indices:
         top_classes.append(classes_strings_list[x])
 
     print(top_classes)
-
-
     return list_ps, top_indices, top_classes
 
 
@@ -275,9 +266,6 @@ transform = transforms.Compose([
 ])
 
 # Load your model (ensure the class definition matches)
-# ... (include the model definition code here)
-#model = MyModel()
-#model.load_state_dict(torch.load('model.pth'))
 model.eval()
 
 # Define a function to classify images

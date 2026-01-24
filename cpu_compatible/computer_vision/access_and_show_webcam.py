@@ -1,12 +1,10 @@
 """
-Effortless Live Video Streaming with OpenCV:
-This script captures live video from a specified source (webcam or video file)
+Effortless Live Video Streaming with OpenCV: This script captures live video from a specified source (webcam or video file)
 and displays it in a resizable window. You can specify the video source via
 a command-line argument; if none is provided, it defaults to the primary webcam.
 
 Usage:
     python script_name.py [video_source]
-
     - video_source can be an integer index (e.g., 0, 1, 2, ...) for webcams,
       or a filename for a video file.
 

@@ -41,11 +41,7 @@ def calculate_hourly_rate(business_expenses, private_expenses, savings, communal
 
     # Total gross income required per month:
     # Business expenses + gross salary + social fees
-    total_required_gross_income = (
-        business_expenses +
-        gross_salary_before_tax +
-        social_fees_amount
-    )
+    total_required_gross_income = business_expenses + gross_salary_before_tax + social_fees_amount
 
     # Calculate the necessary hourly rate
     hourly_rate = total_required_gross_income / monthly_hours
@@ -57,7 +53,7 @@ social_fees = 28.8       # Social security contributions in percentage
 communal_tax = 33        # Municipal tax percentage
 business_expenses = 3000 # Fixed business expenses in currency units
 savings = 8000           # Savings goal in currency units
-private_expenses = 12000 # Personal expenses in currency units
+private_expenses = 20000 # Personal expenses in currency units
 
 # Calculate the required hourly rate
 result = calculate_hourly_rate(

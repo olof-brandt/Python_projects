@@ -28,11 +28,11 @@ import time
 var = strings.entryDate;
 strings.entryDate = GUI.GUIcreate()
 var = strings.entryDate
-print("MySQL electric truck power plotter, v 6");
+print("MySQL electric vehicle power plotter");
 print("By Olof Brandt Lundqvist")
 print("Starting GUI.")
 
-strings.resultsFolder = 'effektLogg_grafer/' + var + '/';
+strings.resultsFolder = 'power_log_graphs/' + var + '/';
 
 #Define input variables for data acquisition
 userYear = int(var[0]) * 1000 + int(var[1]) * 100 + int(var[2]) * 10 + int(var[3]);
@@ -66,7 +66,7 @@ if (booleans.distancePlot == True):
     vectors = DataHandlingAlgorithms.kilometerCalc(vectors, variables)
 
 #Create a folder for saving the graphs
-strings.folderName = 'effektLogg_grafer/' + var;
+strings.folderName = 'power_log_graphs/' + var;
 if booleans.createFolder==True:
     if os.path.isdir(strings.folderName)==True:
         shutil.rmtree(strings.folderName)

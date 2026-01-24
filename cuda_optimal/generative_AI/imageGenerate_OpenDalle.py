@@ -3,9 +3,6 @@ This script uses the Hugging Face Diffusers library to generate an image from a 
 It loads a pre-trained image generation pipeline, generates an image based on the given prompt,
 and saves the resulting image to a file.
 
-Note: The current implementation is very slow, potentially taking several minutes per image.
-For faster results, consider using optimized models or alternative interfaces such as:
-https://huggingface.co/spaces/mrfakename/OpenDalleV1.1-GPU-Demo
 """
 
 from diffusers import AutoPipelineForText2Image
