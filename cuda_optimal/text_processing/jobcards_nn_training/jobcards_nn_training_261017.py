@@ -2,7 +2,8 @@ import json
 import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
-from transformers import AutoTokenizer, AutoModel, AdamW, get_linear_schedule_with_warmup
+from torch.optim import AdamW
+from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 import numpy as np
@@ -24,7 +25,7 @@ class JobCardDataset(Dataset):
         text = str(self.texts[idx])
         label = self.labels[idx]
 
-        encoding = self.tokenizer.encode_plus(
+        encoding = self.tokenizer(
             text,
             add_special_tokens=True,
             max_length=self.max_length,
@@ -56,14 +57,34 @@ class JobCardClassifier(nn.Module):
         return self.fc(output)
 
 
-def load_training_data(json_file_path):
-    with open(json_file_path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
+def load_training_data(training_data_dir='training_data'):
+    import glob
     
-    texts = [item['text'] for item in data]
-    labels = [item['label_id'] for item in data]
+    # Find all files matching jobcards_yymmdd.json pattern
+    pattern = os.path.join(training_data_dir, 'jobcards_*.json')
+    json_files = glob.glob(pattern)
     
-    return texts, labels
+    if not json_files:
+        raise FileNotFoundError(f'No files matching jobcards_yymmdd.json found in {training_data_dir}')
+    
+    print(f'Found {len(json_files)} training data files:')
+    for f in json_files:
+        print(f'  - {os.path.basename(f)}')
+    
+    all_texts = []
+    all_labels = []
+    
+    for json_file in json_files:
+        with open(json_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        texts = [item['text'] for item in data]
+        labels = [item['label_id'] for item in data]
+        
+        all_texts.extend(texts)
+        all_labels.extend(labels)
+    
+    return all_texts, all_labels
 
 
 def train_epoch(model, data_loader, optimizer, device, scheduler):
@@ -124,7 +145,7 @@ def eval_model(model, data_loader, device):
 
 def predict_single(model, tokenizer, text, device, max_length=512):
     model.eval()
-    encoding = tokenizer.encode_plus(
+    encoding = tokenizer(
         text,
         add_special_tokens=True,
         max_length=max_length,
@@ -148,21 +169,24 @@ def predict_single(model, tokenizer, text, device, max_length=512):
 
 def main():
     # Configuration
-    JSON_FILE = 'training_data.json'  # Path to your training data
+    TRAINING_DATA_DIR = 'training_data'  # Directory containing jobcards_yymmdd.json files
     MODEL_NAME = 'KB/bert-base-swedish-cased'  # Swedish BERT model
     MAX_LENGTH = 512
     BATCH_SIZE = 8
     EPOCHS = 5
     LEARNING_RATE = 2e-5
-    MODEL_SAVE_PATH = 'jobcard_classifier.pth'
+    MODEL_SAVE_PATH = 'jobcards_model/jobcard_classifier.pth'
     
     # Device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     print(f'Using device: {device}')
     
+    # Create model directory if it doesn't exist
+    os.makedirs(os.path.dirname(MODEL_SAVE_PATH), exist_ok=True)
+    
     # Load data
     print('Loading training data...')
-    texts, labels = load_training_data(JSON_FILE)
+    texts, labels = load_training_data(TRAINING_DATA_DIR)
     print(f'Loaded {len(texts)} samples')
     
     # Split data
@@ -188,7 +212,7 @@ def main():
     model = model.to(device)
     
     # Optimizer and scheduler
-    optimizer = AdamW(model.parameters(), lr=LEARNING_RATE, correct_bias=False)
+    optimizer = AdamW(model.parameters(), lr=LEARNING_RATE)
     total_steps = len(train_loader) * EPOCHS
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=0, num_training_steps=total_steps
