@@ -6,6 +6,7 @@ from torch.optim import AdamW
 from transformers import AutoTokenizer, AutoModel, get_linear_schedule_with_warmup
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.utils.class_weight import compute_class_weight
 import numpy as np
 from tqdm import tqdm
 import os
@@ -87,11 +88,17 @@ def load_training_data(training_data_dir='training_data'):
     return all_texts, all_labels
 
 
-def train_epoch(model, data_loader, optimizer, device, scheduler):
+def train_epoch(model, data_loader, optimizer, device, scheduler, class_weights=None):
     model.train()
     total_loss = 0
     correct_predictions = 0
     total_samples = 0
+
+    if class_weights is not None:
+        class_weights = class_weights.to(device)
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+    else:
+        criterion = nn.CrossEntropyLoss()
 
     for batch in tqdm(data_loader, desc='Training'):
         input_ids = batch['input_ids'].to(device)
@@ -101,7 +108,7 @@ def train_epoch(model, data_loader, optimizer, device, scheduler):
         optimizer.zero_grad()
 
         outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-        loss = nn.CrossEntropyLoss()(outputs, labels)
+        loss = criterion(outputs, labels)
 
         loss.backward()
         optimizer.step()
@@ -115,13 +122,19 @@ def train_epoch(model, data_loader, optimizer, device, scheduler):
     return total_loss / len(data_loader), correct_predictions.double() / total_samples
 
 
-def eval_model(model, data_loader, device):
+def eval_model(model, data_loader, device, class_weights=None):
     model.eval()
     total_loss = 0
     correct_predictions = 0
     total_samples = 0
     all_preds = []
     all_labels = []
+
+    if class_weights is not None:
+        class_weights = class_weights.to(device)
+        criterion = nn.CrossEntropyLoss(weight=class_weights)
+    else:
+        criterion = nn.CrossEntropyLoss()
 
     with torch.no_grad():
         for batch in tqdm(data_loader, desc='Evaluating'):
@@ -130,7 +143,7 @@ def eval_model(model, data_loader, device):
             labels = batch['label'].to(device)
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            loss = nn.CrossEntropyLoss()(outputs, labels)
+            loss = criterion(outputs, labels)
 
             total_loss += loss.item()
             _, preds = torch.max(outputs, dim=1)
@@ -196,6 +209,15 @@ def main():
     
     print(f'Train samples: {len(train_texts)}, Validation samples: {len(val_texts)}')
     
+    # Calculate class weights to handle imbalance
+    class_weights = compute_class_weight(
+        class_weight='balanced',
+        classes=np.unique(train_labels),
+        y=train_labels
+    )
+    class_weights = torch.tensor(class_weights, dtype=torch.float)
+    print(f'Class weights: {class_weights}')
+    
     # Tokenizer
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     
@@ -225,10 +247,10 @@ def main():
     for epoch in range(EPOCHS):
         print(f'\nEpoch {epoch + 1}/{EPOCHS}')
         
-        train_loss, train_acc = train_epoch(model, train_loader, optimizer, device, scheduler)
+        train_loss, train_acc = train_epoch(model, train_loader, optimizer, device, scheduler, class_weights)
         print(f'Train loss: {train_loss:.4f}, Train accuracy: {train_acc:.4f}')
         
-        val_loss, val_acc, val_preds, val_labels = eval_model(model, val_loader, device)
+        val_loss, val_acc, val_preds, val_labels = eval_model(model, val_loader, device, class_weights)
         print(f'Val loss: {val_loss:.4f}, Val accuracy: {val_acc:.4f}')
         
         if val_acc > best_accuracy:
